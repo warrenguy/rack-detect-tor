@@ -26,7 +26,7 @@ module Rack
     end
 
     def call(env)
-      env['tor_exit_user'] = @tor_exits.include? env['REMOTE_ADDR']
+      env['tor_exit_user'] = @tor_exits.include? request_ip(env)
       @app.call(env)
     end
 
@@ -71,6 +71,18 @@ module Rack
           end
         end
       end
+    end
+
+    def request_ip(env)
+      # yanked from https://github.com/rack/rack/blob/master/lib/rack/request.rb
+      remote_addrs = split_ip_addresses(env['REMOTE_ADDR'])
+      remote_addrs = reject_trusted_ip_addresses(remote_addrs)
+
+      return remote_addrs.first if remote_addrs.any?
+
+      forwarded_ips = split_ip_addresses(env['HTTP_X_FORWARDED_FOR'])
+
+      return reject_trusted_ip_addresses(forwarded_ips).last || env["REMOTE_ADDR"]
     end
 
     def log_message(message)

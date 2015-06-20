@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'rack-detect-tor'
-  s.version     = '0.0.1'
+  s.version     = '0.0.2'
   s.licenses    = ['MIT']
   s.summary     = 'Rack middleware for detecting Tor exits'
   s.description = 'Rack middleware for detecting Tor exits'
