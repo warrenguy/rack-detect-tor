@@ -26,7 +26,7 @@ module Rack
     end
 
     def call(env)
-      env['tor_exit_user'] = @tor_exits.include? env['REMOTE_ADDR']
+      env['tor_exit_user'] = @tor_exits.include? request_ip(env)
       @app.call(env)
     end
 
@@ -79,6 +79,31 @@ module Rack
 
     def log_error(message)
       $stderr.puts "Rack::DetectTor [#{@identifier}]: ERROR: #{message}"
+    end
+
+    # below yanked from https://github.com/rack/rack/blob/master/lib/rack/request.rb
+
+    def request_ip(env)
+      remote_addrs = split_ip_addresses(env['REMOTE_ADDR'])
+      remote_addrs = reject_trusted_ip_addresses(remote_addrs)
+
+      return remote_addrs.first if remote_addrs.any?
+
+      forwarded_ips = split_ip_addresses(env['HTTP_X_FORWARDED_FOR'])
+
+      return reject_trusted_ip_addresses(forwarded_ips).last || env["REMOTE_ADDR"]
+    end
+
+    def trusted_proxy?(ip)
+      ip =~ /\A127\.0\.0\.1\Z|\A(10|172\.(1[6-9]|2[0-9]|30|31)|192\.168)\.|\A::1\Z|\Afd[0-9a-f]{2}:.+|\Alocalhost\Z|\Aunix\Z|\Aunix:/i
+    end
+
+    def reject_trusted_ip_addresses(ip_addresses)
+      ip_addresses.reject { |ip| trusted_proxy?(ip) }
+    end
+
+    def split_ip_addresses(ip_addresses)
+      ip_addresses ? ip_addresses.strip.split(/[,\s]+/) : []
     end
 
   end
