@@ -42,7 +42,7 @@ configured to relay connections to your website.
 
 ## License
 
-MIT license. See [LICENSE](https://github.com/warrenguy/sinatra-rate-limiter/blob/master/LICENSE).
+MIT license. See [LICENSE](https://github.com/warrenguy/rack-detect-tor/blob/master/LICENSE).
 
 ## Author
 
