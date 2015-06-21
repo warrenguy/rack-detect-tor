@@ -35,14 +35,14 @@ module Rack
     def fetch_tor_exits
       begin
         if @options.select{|k,v| k =~ /^external_/}.values.map{|v| v.to_s}.include? ''
-          log_message "WARNING: external_ip/external_port not specified. Results will NOT be accurate"
+          log_message "WARNING: external_ip/external_port not specified. " +
+            "Using list of ALL exits. Results will NOT be accurate"
 
           tor_exits = open('https://check.torproject.org/exit-addresses').read.
             split("\n").select{|i| i =~ /^ExitAddress/}.map{|j| j.split(' ')[1]}
         else
           check_url = "https://check.torproject.org/cgi-bin/TorBulkExitList.py?" +
-            "ip=#{@options['external_ip']}" +
-            (@options['external_port'].nil? ? '' : "&port=#{@options['external_port']}")
+            "ip=#{@options['external_ip']}&port=#{@options['external_port']}"
 
           tor_exits = open(check_url).read.split("\n").select{|i| !(i =~ /^\#/)}
         end
