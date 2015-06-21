@@ -33,29 +33,22 @@ module Rack
     private
 
     def fetch_tor_exits
-      if @options.select{|k,v| k =~ /^external_/}.values.map{|v| v.to_s}.include? ''
-        log_message "WARNING: external_ip/external_port not specified. Results will NOT be accurate"
+      begin
+        if @options.select{|k,v| k =~ /^external_/}.values.map{|v| v.to_s}.include? ''
+          log_message "WARNING: external_ip/external_port not specified. Results will NOT be accurate"
 
-        begin
-          tor_exit_list = open('https://check.torproject.org/exit-addresses').read
-        rescue OpenURI::HTTPError => e
-          log_error "Error fetching list of tor exits: #{e}"
+          tor_exits = open('https://check.torproject.org/exit-addresses').read.
+            split("\n").select{|i| i =~ /^ExitAddress/}.map{|j| j.split(' ')[1]}
+        else
+          check_url = "https://check.torproject.org/cgi-bin/TorBulkExitList.py?" +
+            "ip=#{@options['external_ip']}" +
+            (@options['external_port'].nil? ? '' : "&port=#{@options['external_port']}")
+
+          tor_exits = open(check_url).read.split("\n").select{|i| !(i =~ /^\#/)}
         end
-
-        tor_exits = tor_exit_list.split("\n").select{|i| i =~ /^ExitAddress/}.
-          map{|j| j.split(' ')[1]}
-      else
-        check_url = "https://check.torproject.org/cgi-bin/TorBulkExitList.py?" +
-          "ip=#{@options['external_ip']}" +
-          (@options['external_port'].nil? ? '' : "&port=#{@options['external_port']}")
-
-        begin
-          tor_exit_list = open(check_url).read
-        rescue OpenURI::HTTPError => e
-          log_error "Error fetching list of tor exits: #{e}"
-        end
-
-        tor_exits = tor_exit_list.split("\n").select{|i| !(i =~ /^\#/)}
+      rescue OpenURI::HTTPError => e
+        log_error "Error fetching list of tor exits (#{e})."
+        return nil
       end
 
       log_message "Found #{tor_exits.count} exits."
