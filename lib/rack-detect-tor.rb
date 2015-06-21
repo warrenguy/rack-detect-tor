@@ -19,10 +19,7 @@ module Rack
       log_message 'Fetching initial list of tor exits...'
       @tor_exits = fetch_tor_exits || {}
 
-      unless @options['update_frequency'].to_i == 0
-        log_message "Starting update timer... (updating every #{@options['update_frequency']} seconds)"
-        run_update_timer
-      end
+      start_update_timer unless @options['update_frequency'].to_i == 0
     end
 
     def call(env)
@@ -55,7 +52,9 @@ module Rack
       return tor_exits
     end
 
-    def run_update_timer
+    def start_update_timer
+      log_message "Starting update timer... (updating every #{@options['update_frequency']} seconds)"
+
       Thread.new do
         EventMachine.run do
           @update_timer = EventMachine::PeriodicTimer.new(@options['update_frequency']) do
