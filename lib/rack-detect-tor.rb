@@ -23,7 +23,7 @@ module Rack
     end
 
     def call(env)
-      env['tor_exit_user'] = @tor_exits.include? Rack::Request.new(env).ip
+      env['tor_exit_user'] = @tor_exits.include? Rack::Request.new(env).ip unless env['tor_exit_user'] == true
       @app.call(env)
     end
 
