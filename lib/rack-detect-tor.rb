@@ -8,7 +8,7 @@ module Rack
       @app = app
 
       @options = {
-        'external_ip'      => nil, 
+        'external_ip'      => nil,
         'external_port'    => nil,
         'update_frequency' => 60*60
       }.merge(options)
@@ -35,13 +35,13 @@ module Rack
           log_message "WARNING: external_ip/external_port not specified. " +
             "Using list of ALL exits. Results will NOT be accurate"
 
-          tor_exits = open('https://check.torproject.org/exit-addresses').read.
+          tor_exits = URI.open('https://check.torproject.org/exit-addresses').read.
             split("\n").select{|i| i =~ /^ExitAddress/}.map{|j| j.split(' ')[1]}
         else
           check_url = "https://check.torproject.org/cgi-bin/TorBulkExitList.py?" +
             "ip=#{@options['external_ip']}&port=#{@options['external_port']}"
 
-          tor_exits = open(check_url).read.split("\n").select{|i| !(i =~ /^\#/)}
+          tor_exits = URI.open(check_url).read.split("\n").select{|i| !(i =~ /^\#/)}
         end
       rescue OpenURI::HTTPError => e
         log_error "Error fetching list of tor exits (#{e})."
